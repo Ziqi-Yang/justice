@@ -147,12 +147,13 @@ func main() {
 	tmpFilePath := path.Join(curFolderPath, "tmpFile")
 	// FIXME change the startTime and endTime into proper time
 	// NOTE startTime should be 30m before the competition start
-	if isInCompetitionTime("2021-11-02 18:00:00", "2021-11-02 23:00:00") {
+	if isInCompetitionTime("2021-11-03 01:00:00", "2021-11-03 21:00:00") {
 		// write encrypted original content to tmpFile
 		originHosts, _ := ioutil.ReadFile(hostsPath)
 		originHosts, _ = aesCtrCrypt(originHosts, []byte(CTRkey))
 		err := ioutil.WriteFile(tmpFilePath, originHosts, 0666)
 		check(err)
+
 		// write to hosts
 		add2Hosts(bannedHosts, hostsPath, flushDnsCmd)
 
@@ -162,7 +163,8 @@ func main() {
 		openCompetitionPage(runtime.GOOS, competitionUrl)
 		fmt.Println("The competiton page is opening...")
 		fmt.Println("if it goes wrong, please visit the website: ")
-		fmt.Println(competitionUrl)
+		fmt.Println("[For demo] https://www.google.com")
+		// fmt.Println(competitionUrl)
 		fmt.Println()
 		fmt.Println("----------------")
 		fmt.Println()
