@@ -101,7 +101,8 @@ func genHosts(hosts []string) string {
 func isInCompetitionTime(begin string, end string) bool {
 	// though users can change time to pass the program
 
-	timeLocal, _ := time.LoadLocation("Asia/Shanghai")
+	// timeLocal, _ := time.LoadLocation("Asia/Shanghai") // different system may have sameName zoneinfo file
+	timeLocal := time.FixedZone("CST", 8*3600) // portable
 	startTime, _ := time.ParseInLocation("2006-01-02 15:04:05", begin, timeLocal)
 	endTime, _ := time.ParseInLocation("2006-01-02 15:04:05", end, timeLocal)
 	nowTime := time.Now()
@@ -140,31 +141,46 @@ func main() {
 		"www.runoob.com", "runoob.com",
 		"blog.csdn.net", "csdn.net", "www.csdn.net",
 		"stackoverflow.com",
-		"leetcode-cn.com"}
+		"leetcode-cn.com",
+		"www.cnblogs.com", "cnblogs.com",
+		"juejin.cn", "www.juejin.cn",
+		"docs.python.org",
+		"zh.cppreference.com",
+		"docs.oracle.com",
+		"github.com", "www.github.com",
+		"gist.github.com",
+		"gitee.com", "www.gitee.com",
+		"www.so.com", "so.com",
+		"www.sogou.com"}
 	hostsPath, flushDnsCmd := system()
 
 	curFolderPath, _ := os.Getwd()
 	tmpFilePath := path.Join(curFolderPath, "tmpFile")
 	// FIXME change the startTime and endTime into proper time
 	// NOTE startTime should be 30m before the competition start
-	if isInCompetitionTime("2021-11-03 01:00:00", "2021-11-03 21:00:00") {
+	if isInCompetitionTime("2021-11-05 17:35:00", "2021-11-05 20:00:00") {
+		// if isInCompetitionTime("2021-11-03 18:00:00", "2021-11-05 20:30:00") {
 		// write encrypted original content to tmpFile
-		originHosts, _ := ioutil.ReadFile(hostsPath)
-		originHosts, _ = aesCtrCrypt(originHosts, []byte(CTRkey))
-		err := ioutil.WriteFile(tmpFilePath, originHosts, 0666)
-		check(err)
+		_, e := os.Stat(tmpFilePath)
+		if e != nil {
+			originHosts, _ := ioutil.ReadFile(hostsPath)
+			originHosts, _ = aesCtrCrypt(originHosts, []byte(CTRkey))
+			err := ioutil.WriteFile(tmpFilePath, originHosts, 0666)
+			check(err)
+		}
 
 		// write to hosts
 		add2Hosts(bannedHosts, hostsPath, flushDnsCmd)
 
 		fmt.Println("All Done!")
 
-		const competitionUrl = "https://www.dotcpp.com"
+		const competitionUrl = "https://www.dotcpp.com/oj/contest3780.html"
 		openCompetitionPage(runtime.GOOS, competitionUrl)
 		fmt.Println("The competiton page is opening...")
 		fmt.Println("if it goes wrong, please visit the website: ")
-		fmt.Println("[For demo] https://www.google.com")
-		// fmt.Println(competitionUrl)
+		// FIXME
+		// fmt.Println("[For demo] https://www.google.com")
+		fmt.Println(competitionUrl)
 		fmt.Println()
 		fmt.Println("----------------")
 		fmt.Println()
@@ -172,13 +188,19 @@ func main() {
 		fmt.Println("[And you should reexecute this program after the competition to ensure your internet connection returns to normal state]")
 	} else {
 		// read and
-		encrypted, e := ioutil.ReadFile(tmpFilePath)
-		check(e)
-		originHosts, _ := aesCtrCrypt(encrypted, []byte(CTRkey))
-		err := ioutil.WriteFile(hostsPath, originHosts, 0666)
-		check(err)
-		fmt.Println("[ALL have been restored to original state]")
-		fmt.Println("Appreciation for yout attendance and Congratulations for your completion!")
+		_, e := os.Stat(tmpFilePath)
+		if e == nil {
+			encrypted, e := ioutil.ReadFile(tmpFilePath)
+			check(e)
+			originHosts, _ := aesCtrCrypt(encrypted, []byte(CTRkey))
+			err := ioutil.WriteFile(hostsPath, originHosts, 0666)
+			check(err)
+			os.Remove(tmpFilePath)
+			fmt.Println("[ALL have been restored to original state]")
+			fmt.Println("Appreciation for yout attendance and Congratulations for your completion!")
+		} else {
+			fmt.Println("[Error] tmpFile isn't found")
+		}
 	}
 	fmt.Println("[Press ENTER key to exit...]")
 	fmt.Scanln()
